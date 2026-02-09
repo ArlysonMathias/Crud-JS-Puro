@@ -1,60 +1,81 @@
-const transacoesMock = JSON.parse(localStorage.getItem("transacoes")) || [];
-
 const form = document.getElementById("form");
+let transacoesMock = JSON.parse(localStorage.getItem("transacoes")) || [];
 
-function listarTransacoes(event) {
+function listarTransacoes(event, filtro) {
   event?.preventDefault();
   const ul = document.getElementById("lista-transacoes");
+  transacoesMock = JSON.parse(localStorage.getItem("transacoes")) || [];
 
   ul.innerHTML = "";
-  transacoesMock.forEach((transacao, index) => {
-    const li = document.createElement("li");
-    const classe = transacao.valor > 0 ? "ganho" : "gasto";
-    const bntExcluir = document.createElement("button");
-    bntExcluir.textContent = "X";
-    bntExcluir.classList.add("btn-delete");
-    bntExcluir.onclick = () => removerTarefa(transacao.id);
 
-    li.textContent = `${transacao.nome} - R$ ${transacao.valor.toFixed(2)}`;
-    li.classList.add(classe);
-    li.appendChild(bntExcluir);
-
-    ul.appendChild(li);
+  let listaFiltrada = transacoesMock.filter((element) => {
+    if (filtro === "receitas") {
+      return element.valor > 0;
+    } else if (filtro === "despesas") {
+      return element.valor < 0;
+    } else {
+      return true;
+    }
   });
 
-  calculaReceita();
-  calculaDespesas();
+  listaFiltrada.forEach((transacao, index) => {
+    criarLi(transacao);
+  });
+
+  mostrarSaldoReceita();
+  mostrarSaldoDespesa();
   calculaSaldoTotal();
 }
 
+function criarLi(transacao) {
+  const li = document.createElement("li");
+  const classe = transacao.valor > 0 ? "ganho" : "gasto";
+  const btnExcluir = document.createElement("button");
+  btnExcluir.textContent = "X";
+  btnExcluir.classList.add("btn-delete");
+  btnExcluir.onclick = () => removerTarefa(transacao.id);
+  ul = document.getElementById("lista-transacoes");
+
+  li.classList.add(classe);
+  li.innerHTML = `${transacao.nome} - R$ ${transacao.valor.toFixed(2)}`;
+  li.appendChild(btnExcluir);
+  ul.appendChild(li);
+}
+
 function calculaReceita() {
-  let receita = 0;
+  let receita = transacoesMock;
 
-  transacoesMock.forEach((transacao) => {
-    if (transacao.valor > 0) {
-      receita += transacao.valor;
-    }
-  });
-
-  if (receita > 0) {
-    document.getElementById("receitas").textContent = `R$ ${receita.toFixed(2)}`;
-  }
+  receita = receita
+    .filter((element) => element.valor > 0)
+    .reduce((acc, transacao) => {
+      return acc + transacao.valor;
+    }, 0);
   return receita;
 }
 
+function mostrarSaldoReceita() {
+  receita = calculaReceita();
+  if (receita > 0) {
+    document.getElementById("receitas").textContent = `R$ ${receita.toFixed(2)}`;
+  }
+}
+
 function calculaDespesas() {
-  let despesas = 0;
+  let despesas = transacoesMock;
 
-  transacoesMock.forEach((transacao) => {
-    if (transacao.valor < 0) {
-      despesas += transacao.valor;
-    }
-  });
+  despesas = despesas
+    .filter((element) => element.valor < 0)
+    .reduce((acc, transacao) => {
+      return acc + transacao.valor;
+    }, 0);
+  return despesas;
+}
 
+function mostrarSaldoDespesa() {
+  despesas = calculaDespesas();
   if (despesas < 0) {
     document.getElementById("despesas").textContent = `R$ ${despesas.toFixed(2)}`;
   }
-  return despesas;
 }
 
 function calculaSaldoTotal() {
@@ -63,39 +84,6 @@ function calculaSaldoTotal() {
 
   document.getElementById("saldo").textContent = `R$ ${saldoTotal.toFixed(2)}`;
   return saldoTotal;
-}
-
-function filtroReceitas(event) {
-  event.preventDefault();
-  const ul = document.getElementById("lista-transacoes");
-
-  ul.innerHTML = "";
-  transacoesMock.forEach((transacao, index) => {
-    const classe = "ganho";
-    if (transacao.valor > 0) {
-      const li = document.createElement("li");
-      li.textContent = `${transacao.nome} - R$ ${transacao.valor.toFixed(2)}`;
-      li.classList.add(classe);
-
-      ul.appendChild(li);
-    }
-  });
-}
-
-function filtroDespesas(event) {
-  event.preventDefault();
-  const ul = document.getElementById("lista-transacoes");
-  ul.innerHTML = "";
-
-  transacoesMock.forEach((transacao, index) => {
-    const classe = "gasto";
-    if (transacao.valor < 0) {
-      const li = document.createElement("li");
-      li.textContent = `${transacao.nome} - R$ ${transacao.valor.toFixed(2)}`;
-      li.classList.add(classe);
-      ul.appendChild(li);
-    }
-  });
 }
 
 //Adicionar
@@ -118,17 +106,17 @@ form.onsubmit = function (event) {
   });
   localStorage.setItem("transacoes", JSON.stringify(transacoesMock));
   listarTransacoes();
+
+  document.getElementById("nome").value = "";
+  document.getElementById("valor").value = "";
 };
 
 // remover
 function removerTarefa(id) {
-  console.log(id);
-  // event.preventDefault();
-  transacoesMock.forEach((transacao, index) => {
-    if (transacao.id === id) {
-      transacoesMock.splice(index, 1);
-    }
-  });
+  // console.log(id);
+  let listaAtualizada = transacoesMock.filter((element) => element.id !== id);
+  localStorage.setItem("transacoes", JSON.stringify(listaAtualizada));
+
   listarTransacoes();
 }
 

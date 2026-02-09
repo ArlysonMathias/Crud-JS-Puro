@@ -34,9 +34,9 @@
       </form>
 
       <div class="filtros">
-        <button onclick="listarTransacoes(event)">Todos</button>
-        <button onclick="filtroReceitas(event)">Receitas</button>
-        <button onclick="filtroDespesas(event)">Despesas</button>
+        <button onclick="listarTransacoes()">Todos</button>
+        <button onclick="listarTransacoes(event, 'receitas')">Receitas</button>
+        <button onclick="listarTransacoes(event, 'despesas')">Despesas</button>
       </div>
 
       <ul id="lista-transacoes">
